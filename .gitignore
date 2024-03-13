@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+clientKeystore.jks
+clientTruststore.jks
+client.crt
+server.crt
