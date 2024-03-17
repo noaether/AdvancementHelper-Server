@@ -1,13 +1,10 @@
 package ca.noae.advancementhelper.server.Structures;
 
-import ca.noae.advancementhelper.server.Structures.Payload;
-
 import java.io.Serializable;
 
-/*
- * AHRequest
- */
 public class AHRequest implements Serializable {
+    static final long serialVersionUID = 1L;
+
     transient requestType requestType;
     char requestChar;
     
@@ -24,8 +21,20 @@ public class AHRequest implements Serializable {
     public AHRequest(requestType rT, Payload rP) {
         this.requestType = rT;
         this.requestChar = rT.CHAR;
-        this.requestLength = rP.size;
+        this.requestLength = 10;
         this.requestPayload = rP;
+    }
+
+    public char getRequestChar() {
+        return this.requestChar;
+    }
+
+    public int getRequestLength() {
+        return this.requestLength;
+    }
+
+    public Payload getPayload() {
+        return this.requestPayload;
     }
 }
 
