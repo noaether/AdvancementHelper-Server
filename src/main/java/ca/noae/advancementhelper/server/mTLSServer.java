@@ -6,8 +6,7 @@ import java.security.cert.CertificateException;
 import java.util.logging.Logger;
 import javax.net.ssl.*;
 
-import ca.noae.advancementhelper.server.Structures.*;
-
+import io.jsonwebtoken.Jwts;
 
 public class mTLSServer {
 
@@ -19,10 +18,6 @@ public class mTLSServer {
 
     public static void main(String[] args) {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-
-        Advancement advancement = new Advancement();
-
-        AHRequest toSend = new TLV.AHRequest(requestType.CREATE, Advancement);
 
         try {
             // Initialize SSL context
@@ -48,6 +43,15 @@ public class mTLSServer {
             sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
             SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
+            String userToken = Jwts.builder()
+                    .issuer("server")
+                    .subject("user/01")
+                    .claim("through", "console")
+                    .signWith(keyStore.getKey("server", KEYSTORE_PASSWORD.toCharArray()))
+                    .compact();
+
+            LOGGER.info(userToken);
+
             try {
                 // Create SSL socket
                 SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket("localhost", 8000);
@@ -63,14 +67,11 @@ public class mTLSServer {
 
                 // Receive response from server
                 InputStream inputStream = sslSocket.getInputStream();
-                while (true) {
-                    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-                        String response = bufferedReader.readLine();
-                        LOGGER.info("Received message from database: " + response);
-                        bufferedReader.reset();
-                    } finally {
-                        bufferedReader.close();
-                    }
+                try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+                    String response = bufferedReader.readLine();
+                    LOGGER.info("Received message from database: " + response);
+                } finally {
+                    sslSocket.close();
                 }
             } catch (SSLException e) {
                 LOGGER.severe("SSLException occurred: " + e.getMessage());
