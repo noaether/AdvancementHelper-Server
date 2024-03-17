@@ -3,11 +3,21 @@ package ca.noae.advancementhelper.server.Structures;
 import java.io.Serializable;
 
 public class Payload implements Serializable {
-    int size;
+    static final long serialVersionUID = 1L;
 
     String userToken;
+    String payloadMessage;
 
-    public int getSize() {
-        return size;
+    public Payload(String uT, String pM) {
+        this.userToken = uT;
+        this.payloadMessage = pM;
+    }
+
+    public String getUserToken() {
+        return this.userToken;
+    }
+
+    public String getPayloadMessage() {
+        return this.payloadMessage;
     }
 };

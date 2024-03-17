@@ -3,10 +3,18 @@ package ca.noae.advancementhelper.server;
 import java.io.*;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.util.Base64;
 import java.util.logging.Logger;
 import javax.net.ssl.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.jsonwebtoken.Jwts;
+
+import ca.noae.advancementhelper.server.Structures.AHRequest;
+import ca.noae.advancementhelper.server.Structures.Payload;
+import ca.noae.advancementhelper.server.Structures.requestType;
+import ca.noae.advancementhelper.server.Helpers.ObjectHelper;
 
 public class mTLSServer {
 
@@ -17,6 +25,9 @@ public class mTLSServer {
     private static final Logger LOGGER = Logger.getLogger(mTLSServer.class.getName());
 
     public static void main(String[] args) {
+
+        ObjectMapper mapper = new ObjectMapper();
+        new ObjectHelper(mapper);
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
         try {
@@ -50,18 +61,24 @@ public class mTLSServer {
                     .signWith(keyStore.getKey("server", KEYSTORE_PASSWORD.toCharArray()))
                     .compact();
 
-            LOGGER.info(userToken);
+            LOGGER.info("[] Token is " + userToken);
+
+            Payload payload = new Payload(userToken, "Hello World");
+
+            AHRequest toSend = new AHRequest(requestType.READ, 100, payload);  
+            
+            String finalStr = ObjectHelper.convertToString(toSend);
 
             try {
                 // Create SSL socket
-                SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket("localhost", 8000);
+                SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket("localhost", 8001);
 
                 // Initiate handshake
                 sslSocket.startHandshake();
 
                 // Send message to server
                 OutputStream outputStream = sslSocket.getOutputStream();
-                String message = "Hello Database\n";
+                String message = finalStr + "\n";
                 outputStream.write(message.getBytes());
                 LOGGER.info("Sent message to database: " + message);
 
@@ -69,7 +86,7 @@ public class mTLSServer {
                 InputStream inputStream = sslSocket.getInputStream();
                 try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
                     String response = bufferedReader.readLine();
-                    LOGGER.info("Received message from database: " + response);
+                    LOGGER.info("Received message from server: " + response);
                 } finally {
                     sslSocket.close();
                 }
