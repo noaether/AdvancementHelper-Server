@@ -6,6 +6,9 @@ import java.security.cert.CertificateException;
 import java.util.logging.Logger;
 import javax.net.ssl.*;
 
+import ca.noae.advancementhelper.server.Structures.*;
+
+
 public class mTLSServer {
 
     private static final String KEYSTORE_LOCATION = "serverKeystore.jks";
@@ -16,6 +19,10 @@ public class mTLSServer {
 
     public static void main(String[] args) {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+
+        Advancement advancement = new Advancement();
+
+        AHRequest toSend = new TLV.AHRequest(requestType.CREATE, Advancement);
 
         try {
             // Initialize SSL context
@@ -56,11 +63,14 @@ public class mTLSServer {
 
                 // Receive response from server
                 InputStream inputStream = sslSocket.getInputStream();
-                try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-                    String response = bufferedReader.readLine();
-                    LOGGER.info("Received message from database: " + response);
-                } finally {
-                    sslSocket.close();
+                while (true) {
+                    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+                        String response = bufferedReader.readLine();
+                        LOGGER.info("Received message from database: " + response);
+                        bufferedReader.reset();
+                    } finally {
+                        bufferedReader.close();
+                    }
                 }
             } catch (SSLException e) {
                 LOGGER.severe("SSLException occurred: " + e.getMessage());
